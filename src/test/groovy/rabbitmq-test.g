@@ -32,7 +32,7 @@ mq.exchange(name: "test", durable: false, autoDelete: true) {
   queue routingKey: "test2.key", {
     publish myHeaderValue: "customHeader", body: {msg, out ->
       msg.properties.contentType = "text/plain"
-      out.write("test are test bytes".bytes)
+      out.write("these are test bytes".bytes)
     }
   }
 }

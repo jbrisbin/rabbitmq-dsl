@@ -28,6 +28,40 @@ code similar to what ActiveMQ users have with Camel. Nesting queues within excha
 ensures that an exchange exists and that all queues are properly bound before your
 Groovy code is actually run.
 
+If you want an anonymous, server-generated queue name, set the "name" property to "null":
+
+<pre><code>mq.exchange(name: "test", durable: false, autoDelete: true) {
+  // Anonymous, non-durable queue
+  queue name: null, routingKey: "test.key", {
+    consume tag: "test", onmessage: {msg ->
+      log.info(msg.bodyAsString)
+    }
+  }
+}</code></pre>
+
+To publish messages, use the "publish" node:
+
+<pre><code> // Publish some messages
+  queue routingKey: "test.key", {
+    publish body: "this is a test"
+  }</code></pre>
+
+If you set the "body" property to a string, the builder will call .getBytes() on it and
+set the body of the message to that. If you set the "body" property to a real byte
+array (maybe you read in a file or posted a file, or something), it will blindly use
+what you give it. If you want to pass a closure, you can do that too:
+
+<pre><code>  queue routingKey: "test.key", {
+    publish myHeaderValue: "customHeader", body: {msg, out ->
+      msg.properties.contentType = "text/plain"
+      out.write("these are test bytes".bytes)
+    }
+  }</code></pre>
+
+The "msg" variable passed to your closure is actually a lightweight bean wrapper that puts
+an instance of AMQP.BasicProperties ("properties"), an AMQP Envelope ("envelope"), and the
+body ("body" and "bodyAsString").
+
 If you want to run arbitrary Groovy code and access the RabbitMQ Channel object directly,
 declare a closure like so:
 

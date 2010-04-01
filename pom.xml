@@ -60,7 +60,7 @@
       <version>${slf4j.version}</version>
     </dependency>
 
-    <!-- Spring 3.0 -->
+    <!-- Spring 3.0 
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-beans</artifactId>
@@ -87,6 +87,7 @@
       <artifactId>spring-aop</artifactId>
       <version>${spring.version}</version>
     </dependency>
+    -->
 
     <!-- RabbitMQ -->
     <dependency>
