@@ -4,14 +4,16 @@ The Groovy DSL (Domain Specific Language) for RabbitMQ allows you to mix standar
 Groovy code with a builder-style syntax for working with a RabbitMQ server. For
 example, consider the following:
 
-  mq.exchange(name: "test", durable: false, autoDelete: true) {
-    // Named, non-durable queue
-    queue name: "test", routingKey: "test.key", {
-      consume tag: "test", onmessage: {msg ->
-        log.info(msg.bodyAsString)
-      }
+<pre><code>
+mq.exchange(name: "test", durable: false, autoDelete: true) {
+  // Named, non-durable queue
+  queue name: "test", routingKey: "test.key", {
+    consume tag: "test", onmessage: {msg ->
+      log.info(msg.bodyAsString)
     }
   }
+}
+</code></pre>
 
 This example uses the RabbitMQ DSL to:
 
