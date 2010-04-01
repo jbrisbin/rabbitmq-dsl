@@ -12,7 +12,7 @@ mq {channel ->
   //channel.exchangeDelete("test")
 }
 
-mq.exchange(name: "test") {
+mq.exchange(name: "test", durable: false, autoDelete: true) {
   // Named, non-durable queue
   queue name: "test", routingKey: "test.key", {
     consume tag: "test", onmessage: "myevent"

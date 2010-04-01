@@ -143,7 +143,9 @@ public class RabbitMQDsl {
       boolean active = true;
       while ( active ) {
         try {
-          mqChannel.wait( 500 );
+          synchronized (mqChannel) {
+            mqChannel.wait( 500 );
+          }
         } catch ( InterruptedException e ) {
           log.error( e.getMessage(), e );
         }
