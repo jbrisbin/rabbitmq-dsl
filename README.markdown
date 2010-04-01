@@ -1,3 +1,19 @@
+## Installing
+
+Download the latest binary package:
+
+http://github.com/jbrisbin/rabbitmq-dsl/downloads
+
+Unzip in your desired location:
+
+<pre><code>cd opt
+tar -zxvf ~/rabbitmq-dsl-1.0.x.tar.gz</code></pre>
+
+Get the list of possible command-line switches:
+
+<pre><code>cd rabbitmq-dsl-1.0.x
+bin/mqdsl -?</code></pre>
+
 ## Building
 
 Clone the source code:
