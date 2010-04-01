@@ -60,7 +60,8 @@ what you give it. If you want to pass a closure, you can do that too:
 
 The "msg" variable passed to your closure is actually a lightweight bean wrapper that puts
 an instance of AMQP.BasicProperties ("properties"), an AMQP Envelope ("envelope"), and the
-body ("body" and "bodyAsString").
+body ("body" and "bodyAsString") onto a single object, which makes the bean introspection in
+Groovy happier.
 
 If you want to run arbitrary Groovy code and access the RabbitMQ Channel object directly,
 declare a closure like so:
@@ -74,7 +75,7 @@ declare a closure like so:
 
 * Returning a non-null or "true" result from the closure specified on the "onmessage"
   property causes the consumer to keep listening for messages until the closure returns
-  a false or <NULL> value.
+  a false or &lt;NULL&gt; value.
 
 ## License:
 
