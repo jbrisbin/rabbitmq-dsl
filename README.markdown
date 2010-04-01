@@ -9,6 +9,20 @@ Build a jar file of the command-line DSL runner:
 <pre><code>cd rabbitmq-dsl
 mvn -Dmaven.test.skip=true package</code></pre>
 
+Copy the dependencies into a directory called "lib":
+
+<pre><code>mkdir lib
+mvn dependency:copy-dependencies -DoutputDirectory=lib</code></pre>
+
+Then create a directory for your log files (or edit the bash script to put
+log files elsewhere):
+
+<pre><code>mkdir log</code></pre>
+
+These directories are not tracked in Git, so you have to keep them updated
+manually (if anyone wants to contribute a patch to do this automagically,
+it would be appreciated! :).
+
 To use the DSL runner, execute the bash script located in "./bin":
 
 <pre><code>bin/mqdsl -?</code></pre>
