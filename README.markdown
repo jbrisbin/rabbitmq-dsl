@@ -1,3 +1,17 @@
+## Building
+
+Clone the source code:
+
+<pre><code>git clone git://github.com/jbrisbin/rabbitmq-dsl.git</code></pre>
+
+To build a JAR file of the command-line DSL runner:
+
+<pre><code>cd rabbitmq-dsl
+mvn package</code></pre>
+
+There is a unit test that will run in the normal Maven build stage. Look in the
+src/test/groovy/rabbitmq-test.g file to see the full text of the DSL test.
+
 ## RabbitMQ Groovy DSL
 
 The Groovy DSL (Domain Specific Language) for RabbitMQ allows you to mix standard
