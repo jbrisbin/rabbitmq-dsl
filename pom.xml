@@ -5,9 +5,9 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.jbrisbin</groupId>
-  <artifactId>rabbitmq-groovy-builder</artifactId>
-  <version>1.0</version>
-  <name>RabbitMQ Groovy Builder</name>
+  <artifactId>rabbitmq-dsl</artifactId>
+  <version>1.0.1</version>
+  <name>RabbitMQ Groovy DSL</name>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -60,7 +60,7 @@
       <version>${slf4j.version}</version>
     </dependency>
 
-    <!-- Spring 3.0 
+    <!-- Spring 3.0
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-beans</artifactId>
@@ -115,6 +115,7 @@
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>4.7</version>
+      <scope>test</scope>
     </dependency>
 
   </dependencies>

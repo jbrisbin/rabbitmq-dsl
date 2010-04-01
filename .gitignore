@@ -2,3 +2,6 @@
 target
 *.iml
 *.iws
+rabbitmq-dsl.i*
+lib
+log

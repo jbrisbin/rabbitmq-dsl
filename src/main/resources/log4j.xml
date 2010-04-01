@@ -8,12 +8,19 @@
     </layout>
   </appender>
 
+  <appender name="logfile" class="org.apache.log4j.DailyRollingFileAppender">
+    <param name="File" value="${log.dir}/mqdsl.log"/>
+    <layout class="org.apache.log4j.PatternLayout">
+      <param name="ConversionPattern" value="${instance} %d %-5p %c{1} - %m%n"/>
+    </layout>
+  </appender>
+
   <category name="com.jbrisbin">
     <level value="DEBUG"/>
   </category>
 
   <root>
-    <appender-ref ref="console"/>
+    <appender-ref ref="logfile"/>
   </root>
 
 </log4j:configuration>
