@@ -29,7 +29,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.Properties;
-import java.util.concurrent.Future;
 
 /**
  * Created by IntelliJ IDEA. User: jbrisbin Date: Mar 31, 2010 Time: 10:27:03 AM To change this template use File |
@@ -128,7 +127,7 @@ public class RabbitMQDsl {
     String[] includes = (System.getenv().containsKey("MQDSL_INCLUDE") ? System.getenv("MQDSL_INCLUDE")
         .split(String.valueOf(File.pathSeparatorChar)) : new String[]{"."});
     try {
-      GroovyScriptEngine groovyEngine = new GroovyScriptEngine(includes);
+      GroovyScriptEngine engine = new GroovyScriptEngine(includes);
       Binding binding = new Binding(args.getArgs());
       RabbitMQBuilder builder = new RabbitMQBuilder();
 
@@ -154,7 +153,7 @@ public class RabbitMQDsl {
       builder.setChannel(mqChannel);
       binding.setVariable("mq", builder);
       binding.setVariable("stdout", out);
-      binding.setVariable("log", LoggerFactory.getLogger(filename));
+      binding.setVariable("log", LoggerFactory.getLogger(filename.replaceAll("\\.g$", "")));
 
       GroovyShell shell = new GroovyShell(binding);
       try {
@@ -163,8 +162,7 @@ public class RabbitMQDsl {
         builder.dispatchError(t);
       }
 
-      boolean active = true;
-      while (active) {
+      while (builder.isActive()) {
         try {
           synchronized (mqChannel) {
             mqChannel.wait(500);
@@ -172,27 +170,23 @@ public class RabbitMQDsl {
         } catch (InterruptedException e) {
           log.error(e.getMessage(), e);
         }
-        for (Future f : builder.getConsumers()) {
-          if (!active && !f.isDone()) {
-            active = true;
-          } else {
-            active = !f.isDone();
-          }
-        }
       }
 
-      mqChannel.close();
-      mqConnection.close();
+      try {
+        mqChannel.close();
+        mqConnection.close();
 
-      out.flush();
-      out.close();
+        out.flush();
+        out.close();
+      } catch (Throwable ignored) {
+      }
 
     } catch (IOException e) {
       e.printStackTrace();
       System.exit(1);
+    } finally {
+      System.exit(0);
     }
-
-    System.exit(0);
   }
 
   public static void printUsage() {
