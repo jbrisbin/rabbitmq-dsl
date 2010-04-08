@@ -136,20 +136,22 @@ public class RabbitMQBuilder extends BuilderSupport {
       if (params.containsKey("name")) {
         exchange.setName(params.get("name").toString());
       }
-      exchange.setType((params.containsKey("type") ? params.get("type").toString() : "direct"));
-      exchange.setDurable((params.containsKey("durable") ? (Boolean) params.get("durable") : false));
-      exchange.setAutoDelete((params.containsKey("autoDelete") ? (Boolean) params.get("autoDelete") : false));
-      exchange.setPassive((params.containsKey("passive") ? (Boolean) params.get("passive") : false));
-      try {
-        channel.exchangeDeclare(exchange.getName(),
-            exchange.getType(),
-            exchange.isPassive(),
-            exchange.isDurable(),
-            exchange.isAutoDelete(),
-            exchange.getParameters());
-      } catch (IOException e) {
-        log.error(e.getMessage(), e);
-        dispatchError(e);
+      if (params.containsKey("type")) {
+        exchange.setType((params.containsKey("type") ? params.get("type").toString() : "direct"));
+        exchange.setDurable((params.containsKey("durable") ? (Boolean) params.get("durable") : false));
+        exchange.setAutoDelete((params.containsKey("autoDelete") ? (Boolean) params.get("autoDelete") : false));
+        exchange.setPassive((params.containsKey("passive") ? (Boolean) params.get("passive") : false));
+        try {
+          channel.exchangeDeclare(exchange.getName(),
+              exchange.getType(),
+              exchange.isPassive(),
+              exchange.isDurable(),
+              exchange.isAutoDelete(),
+              exchange.getParameters());
+        } catch (IOException e) {
+          log.error(e.getMessage(), e);
+          dispatchError(e);
+        }
       }
       return exchange;
     } else if (node.equals("queue")) {
@@ -203,7 +205,7 @@ public class RabbitMQBuilder extends BuilderSupport {
             }
           }
         }
-        clConsumer.monitorQueue(channel, currentQueue.getName());
+        clConsumer.monitorQueue(channel, (null != currentQueue ? currentQueue.getName() : ""));
         consumers.add(pool.submit(clConsumer));
         closureConsumers.add(clConsumer);
         return clConsumer;
