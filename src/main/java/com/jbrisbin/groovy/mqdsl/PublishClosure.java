@@ -20,6 +20,7 @@ import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import groovy.lang.Closure;
+import groovy.lang.GString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,17 +35,17 @@ import java.util.Map;
 @SuppressWarnings({"unchecked"})
 public class PublishClosure extends Closure {
 
-  private Logger log = LoggerFactory.getLogger( getClass() );
+  private Logger log = LoggerFactory.getLogger(getClass());
   private Connection connection;
 
-  public PublishClosure( Object owner, Connection connection ) {
-    super( owner );
+  public PublishClosure(Object owner, Connection connection) {
+    super(owner);
     this.connection = connection;
   }
 
   @Override
-  public Object call( Object[] args ) {
-    if ( args.length < 2 ) {
+  public Object call(Object[] args) {
+    if (args.length < 2) {
       return null;
     }
 
@@ -52,37 +53,39 @@ public class PublishClosure extends Closure {
     String routingKey = args[1].toString();
     Map headers = null;
     byte[] body = null;
-    for ( int i = 2; i < args.length; i++ ) {
-      if ( args[i] instanceof Map ) {
+    for (int i = 2; i < args.length; i++) {
+      if (args[i] instanceof Map) {
         headers = (Map) args[i];
-      } else if ( args[i] instanceof byte[] ) {
+      } else if (args[i] instanceof byte[]) {
         body = (byte[]) args[i];
+      } else if (args[i] instanceof String || args[i] instanceof GString) {
+        body = args[i].toString().getBytes();
       }
     }
 
     AMQP.BasicProperties properties = new AMQP.BasicProperties();
-    if ( null != headers ) {
-      if ( headers.containsKey( "contentType" ) ) {
-        properties.setContentType( headers.remove( "contentType" ).toString() );
+    if (null != headers) {
+      if (headers.containsKey("contentType")) {
+        properties.setContentType(headers.remove("contentType").toString());
       }
-      if ( headers.containsKey( "correlationId" ) ) {
-        properties.setCorrelationId( headers.remove( "correlationId" ).toString() );
+      if (headers.containsKey("correlationId")) {
+        properties.setCorrelationId(headers.remove("correlationId").toString());
       }
-      if ( headers.containsKey( "replyTo" ) ) {
-        properties.setReplyTo( headers.remove( "replyTo" ).toString() );
+      if (headers.containsKey("replyTo")) {
+        properties.setReplyTo(headers.remove("replyTo").toString());
       }
-      if ( headers.containsKey( "contentEncoding" ) ) {
-        properties.setContentEncoding( headers.remove( "contentEncoding" ).toString() );
+      if (headers.containsKey("contentEncoding")) {
+        properties.setContentEncoding(headers.remove("contentEncoding").toString());
       }
-      properties.setHeaders( headers );
+      properties.setHeaders(headers);
     }
 
     try {
       Channel channel = connection.createChannel();
-      channel.basicPublish( exchange, routingKey, properties, body );
+      channel.basicPublish(exchange, routingKey, properties, body);
       channel.close();
-    } catch ( IOException e ) {
-      log.error( e.getMessage(), e );
+    } catch (IOException e) {
+      log.error(e.getMessage(), e);
     }
 
 
