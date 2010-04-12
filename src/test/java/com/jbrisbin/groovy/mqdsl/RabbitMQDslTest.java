@@ -21,7 +21,7 @@ public class RabbitMQDslTest {
     String vhost = System.getProperty( "mq.virtualhost", "/" );
 
     RabbitMQDsl.main(
-        new String[]{"-h", host, "-p", port, "-v", vhost, "-U", username, "-P", password, "-f", "src/test/groovy/rabbitmq-test.g"} );
+        new String[]{"-h", host, "-p", port, "-v", vhost, "-U", username, "-P", password, "-f", "src/test/groovy/rabbitmqtest.g"} );
 
   }
 

@@ -17,6 +17,7 @@
 package com.jbrisbin.groovy.mqdsl;
 
 import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.QueueingConsumer;
 import groovy.lang.Closure;
 import org.slf4j.Logger;
@@ -45,6 +46,10 @@ public class ClosureConsumer implements Callable<ClosureConsumer> {
   private boolean active = true;
   private RabbitMQBuilder parent;
 
+  public ClosureConsumer(Connection connection) throws IOException {
+    channel = connection.createChannel();
+  }
+
   public List<Closure> getDelegates() {
     return delegates;
   }
@@ -65,8 +70,7 @@ public class ClosureConsumer implements Callable<ClosureConsumer> {
     return channel;
   }
 
-  public void monitorQueue(Channel channel, String queue) {
-    this.channel = channel;
+  public void monitorQueue(String queue) {
     this.queueingConsumer = new QueueingConsumer(channel, incomingQueue);
     try {
       if (null != consumerTag) {
@@ -122,6 +126,7 @@ public class ClosureConsumer implements Callable<ClosureConsumer> {
       msg.setProperties(delivery.getProperties());
       msg.setBody(delivery.getBody());
 
+      int keepListening = 0;
       for (Closure cl : delegates) {
         try {
           // Set logger such that we can identify the output
@@ -129,15 +134,24 @@ public class ClosureConsumer implements Callable<ClosureConsumer> {
               LoggerFactory.getLogger("msg-" + delivery.getEnvelope().getDeliveryTag() + "-" + cl.getProperty("name")));
           Object o = cl.call(new Object[]{msg});
           if (o instanceof Boolean) {
-            setActive((Boolean) o);
-          } else if (null == o) {
-            setActive(false);
+            if (((Boolean) o).booleanValue()) {
+              keepListening++;
+            }
+          } else if (null != o) {
+            keepListening++;
           }
         } catch (Throwable t) {
           parent.dispatchError(t);
         }
       }
+      setActive(keepListening > 0);
     }
+    synchronized (parent.getClosureConsumers()) {
+      parent.getClosureConsumers().remove(this);
+    }
+    channel.close();
+
     return this;
   }
+
 }

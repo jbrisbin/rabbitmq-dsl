@@ -1,9 +1,8 @@
 mq.on error: {err ->
   err.printStackTrace()
 }, myevent: {msg ->
-  stdout.write(msg.bodyAsString.bytes)
+  stdout.write((msg.bodyAsString + "\n").bytes)
   stdout.flush()
-  return false
 }, afterPublish: {exchange, routingKey, msg ->
   log.info("Published to " + exchange + "/" + routingKey)
 }
@@ -14,7 +13,7 @@ mq {channel ->
   //channel.exchangeDelete("test")
 }
 
-mq.exchange name: "test", type: "topic", durable: false, autoDelete: true, {
+mq.exchange name: "test", type: "direct", durable: false, autoDelete: true, {
   // Named, non-durable queue
   queue name: "test", routingKey: "test.key", {
     consume tag: "test", onmessage: "myevent"
@@ -26,8 +25,13 @@ mq.exchange name: "test", type: "topic", durable: false, autoDelete: true, {
       stdout.write((msg.bodyAsString + "\n").bytes)
       stdout.write(("myHeaderValue=" + msg.properties.headers["myHeaderValue"] + "\n").bytes)
       stdout.flush()
-      //publish("test", "test.key", "this is from consumer".bytes)
-      return false
+      if (msg.bodyAsString.equals("this is from consumer")) {
+        return false
+      } else {
+        def headers = ["myHeaderValue": "something"]
+        send("test", "test2.key", headers, "this is from consumer".bytes)
+        return true
+      }
     }
   }
   // Poke some messages
