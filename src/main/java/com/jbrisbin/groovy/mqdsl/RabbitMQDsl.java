@@ -159,6 +159,8 @@ public class RabbitMQDsl {
         shell.evaluate(new StringReader(script.toString()));
       } catch (Throwable t) {
         builder.dispatchError(t);
+        // Doesn't do much good to dispatch into a script that has a syntax error, so...
+        t.printStackTrace();
       }
 
       while (builder.isActive()) {
