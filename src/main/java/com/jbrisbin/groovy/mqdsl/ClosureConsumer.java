@@ -26,9 +26,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
-import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Created by IntelliJ IDEA. User: jbrisbin Date: Mar 31, 2010 Time: 1:18:04 PM To change this template use File |
@@ -38,7 +36,6 @@ public class ClosureConsumer implements Callable<ClosureConsumer> {
 
   private Logger log = LoggerFactory.getLogger(getClass());
   private List<Closure> delegates = new ArrayList<Closure>();
-  private BlockingQueue<QueueingConsumer.Delivery> incomingQueue = new LinkedBlockingQueue<QueueingConsumer.Delivery>();
   private QueueingConsumer queueingConsumer;
   private Channel channel;
   private String consumerTag = null;
@@ -58,10 +55,6 @@ public class ClosureConsumer implements Callable<ClosureConsumer> {
     this.delegates.add(delegate);
   }
 
-  public BlockingQueue<QueueingConsumer.Delivery> getIncomingQueue() {
-    return incomingQueue;
-  }
-
   public QueueingConsumer getQueueingConsumer() {
     return queueingConsumer;
   }
@@ -71,12 +64,12 @@ public class ClosureConsumer implements Callable<ClosureConsumer> {
   }
 
   public void monitorQueue(String queue) {
-    this.queueingConsumer = new QueueingConsumer(channel, incomingQueue);
+    this.queueingConsumer = new QueueingConsumer(channel);
     try {
       if (null != consumerTag) {
         channel.basicConsume(queue, false, consumerTag, queueingConsumer);
       } else {
-        channel.basicConsume(queue, queueingConsumer);
+        channel.basicConsume(queue, false, queueingConsumer);
       }
     } catch (IOException e) {
       log.error(e.getMessage(), e);
@@ -117,7 +110,7 @@ public class ClosureConsumer implements Callable<ClosureConsumer> {
 
   public ClosureConsumer call() throws Exception {
     while (active) {
-      QueueingConsumer.Delivery delivery = incomingQueue.take();
+      QueueingConsumer.Delivery delivery = queueingConsumer.nextDelivery();
       if (ack) {
         channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
       }

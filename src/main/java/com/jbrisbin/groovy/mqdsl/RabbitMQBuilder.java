@@ -284,7 +284,8 @@ public class RabbitMQBuilder extends BuilderSupport {
         headers.remove("body");
 
         String exchange = (null != currentExchange ? currentExchange.getName() : "");
-        String routingKey = (null != currentQueue ? currentQueue.getRoutingKey() : "");
+        String routingKey = (params.containsKey("routingKey") ? params.get("routingKey")
+            .toString() : (null != currentQueue ? currentQueue.getRoutingKey() : ""));
         try {
           if (eventHandlers.containsKey(Events.BEFORE_PUBLISH)) {
             dispatchEvent(Events.BEFORE_PUBLISH, new Object[]{exchange, routingKey, msg});
