@@ -175,7 +175,6 @@ public class RabbitMQBuilder extends BuilderSupport {
           Channel channel = connection.createChannel();
           channel.exchangeDeclare(exchange.getName(),
               exchange.getType(),
-              exchange.isPassive(),
               exchange.isDurable(),
               exchange.isAutoDelete(),
               exchange.getParameters());
@@ -210,7 +209,6 @@ public class RabbitMQBuilder extends BuilderSupport {
           } else {
             q.setName(params.get("name").toString());
             channel.queueDeclare(q.getName(),
-                q.isPassive(),
                 q.isDurable(),
                 q.isExclusive(),
                 q.isAutoDelete(),

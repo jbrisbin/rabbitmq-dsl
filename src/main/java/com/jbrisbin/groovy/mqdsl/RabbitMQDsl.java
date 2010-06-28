@@ -19,7 +19,6 @@ package com.jbrisbin.groovy.mqdsl;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
-import com.rabbitmq.client.ConnectionParameters;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import groovy.util.GroovyScriptEngine;
@@ -141,13 +140,15 @@ public class RabbitMQDsl {
       int port = Integer.parseInt(args.hasOption("p") ? args.getOptionValue("p") : props.getProperty("mq.port",
           "5672"));
 
-      ConnectionParameters mqConnParams = new ConnectionParameters();
-      mqConnParams.setUsername(username);
-      mqConnParams.setPassword(password);
+      ConnectionFactory mqConnFactory = new ConnectionFactory();
+      mqConnFactory.setHost(host);
+      mqConnFactory.setPort(port);
+      mqConnFactory.setUsername(username);
+      mqConnFactory.setPassword(password);
       if (null != virtualHost) {
-        mqConnParams.setVirtualHost(virtualHost);
+        mqConnFactory.setVirtualHost(virtualHost);
       }
-      mqConnection = new ConnectionFactory(mqConnParams).newConnection(host, port);
+      mqConnection = mqConnFactory.newConnection();
       builder.setConnection(mqConnection);
       binding.setVariable("mq", builder);
       binding.setVariable("send", new PublishClosure(binding, mqConnection));
