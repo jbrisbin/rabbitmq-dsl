@@ -15,11 +15,12 @@
     </layout>
   </appender>
 
-  <category name="com.jbrisbin">
+  <!--category name="com.jbrisbin">
     <level value="DEBUG"/>
-  </category>
+  </category-->
 
   <root>
+		<level value="INFO"/>
     <appender-ref ref="logfile"/>
   </root>
 

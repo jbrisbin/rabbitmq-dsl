@@ -16,18 +16,25 @@
 
 package com.jbrisbin.groovy.mqdsl;
 
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Properties;
+
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
-import groovy.util.GroovyScriptEngine;
-import org.apache.commons.cli.*;
+import org.apache.commons.cli.BasicParser;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.apache.commons.cli.Parser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.*;
-import java.util.Properties;
+import org.springframework.amqp.rabbit.connection.SingleConnectionFactory;
 
 /**
  * Created by IntelliJ IDEA. User: jbrisbin Date: Mar 31, 2010 Time: 10:27:03 AM To change this template use File |
@@ -36,165 +43,151 @@ import java.util.Properties;
 @SuppressWarnings({"unchecked"})
 public class RabbitMQDsl {
 
-  static Logger log = LoggerFactory.getLogger(RabbitMQDsl.class);
-  static Options cliOpts = new Options();
-  static Connection mqConnection;
-  static Channel mqChannel;
+	static Logger log = LoggerFactory.getLogger(RabbitMQDsl.class);
+	static Options cliOpts = new Options();
 
-  static {
-    cliOpts.addOption("f", true, "RabbitMQ DSL file to evaluate.");
-    cliOpts.addOption("o", true, "Pipe return message to this file.");
-    cliOpts.addOption("h", true, "Host name of the RabbitMQ server to connect to.");
-    cliOpts.addOption("p", true, "Port of the RabbitMQ server to connect to.");
-    cliOpts.addOption("v", true, "Virtual host of the RabbitMQ server to connect to.");
-    cliOpts.addOption("U", true, "Username for RabbitMQ connections.");
-    cliOpts.addOption("P", true, "Password for the RabbitMQ connections.");
-    cliOpts.addOption("?", "help", false, "Usage instructions.");
-  }
+	static {
+		cliOpts.addOption("f", true, "RabbitMQ DSL file to evaluate.");
+		cliOpts.addOption("o", true, "Pipe return message to this file.");
+		cliOpts.addOption("h", true, "Host name of the RabbitMQ server to connect to.");
+		cliOpts.addOption("p", true, "Port of the RabbitMQ server to connect to.");
+		cliOpts.addOption("v", true, "Virtual host of the RabbitMQ server to connect to.");
+		cliOpts.addOption("U", true, "Username for RabbitMQ connections.");
+		cliOpts.addOption("P", true, "Password for the RabbitMQ connections.");
+		cliOpts.addOption("?", "help", false, "Usage instructions.");
+	}
 
-  public static void main(String[] argv) {
+	public static void main(String[] argv) {
 
-    // Parse command line arguments
-    CommandLine args = null;
-    try {
-      Parser p = new BasicParser();
-      args = p.parse(cliOpts, argv);
-    } catch (ParseException e) {
-      log.error(e.getMessage(), e);
-    }
+		// Parse command line arguments
+		CommandLine args = null;
+		try {
+			Parser p = new BasicParser();
+			args = p.parse(cliOpts, argv);
+		} catch (ParseException e) {
+			log.error(e.getMessage(), e);
+		}
 
-    // Check for help
-    if (args.hasOption('?')) {
-      printUsage();
-      return;
-    }
+		// Check for help
+		if (args.hasOption('?')) {
+			printUsage();
+			return;
+		}
 
-    // Runtime properties
-    Properties props = System.getProperties();
+		// Runtime properties
+		Properties props = System.getProperties();
 
-    // Check for ~/.rabbitmqrc
-    File userSettings = new File(System.getProperty("user.home"), ".rabbitmqrc");
-    if (userSettings.exists()) {
-      try {
-        props.load(new FileInputStream(userSettings));
-      } catch (IOException e) {
-        log.error(e.getMessage(), e);
-      }
-    }
+		// Check for ~/.rabbitmqrc
+		File userSettings = new File(System.getProperty("user.home"), ".rabbitmqrc");
+		if (userSettings.exists()) {
+			try {
+				props.load(new FileInputStream(userSettings));
+			} catch (IOException e) {
+				log.error(e.getMessage(), e);
+			}
+		}
 
-    // Load Groovy builder file
-    StringBuffer script = new StringBuffer();
-    BufferedInputStream in = null;
-    String filename = "<STDIN>";
-    if (args.hasOption("f")) {
-      filename = args.getOptionValue("f");
-      try {
-        in = new BufferedInputStream(new FileInputStream(filename));
-      } catch (FileNotFoundException e) {
-        log.error(e.getMessage(), e);
-      }
-    } else {
-      in = new BufferedInputStream(System.in);
-    }
+		// Load Groovy builder file
+		StringBuffer script = new StringBuffer();
+		BufferedInputStream in = null;
+		String filename = "<STDIN>";
+		if (args.hasOption("f")) {
+			filename = args.getOptionValue("f");
+			try {
+				in = new BufferedInputStream(new FileInputStream(filename));
+			} catch (FileNotFoundException e) {
+				log.error(e.getMessage(), e);
+			}
+		} else {
+			in = new BufferedInputStream(System.in);
+		}
 
-    // Read script
-    if (null != in) {
-      byte[] buff = new byte[4096];
-      try {
-        for (int read = in.read(buff); read > -1;) {
-          script.append(new String(buff, 0, read));
-          read = in.read(buff);
-        }
-      } catch (IOException e) {
-        log.error(e.getMessage(), e);
-      }
-    } else {
-      System.err.println("No script file to evaluate...");
-    }
+		// Read script
+		if (null != in) {
+			byte[] buff = new byte[4096];
+			try {
+				for (int read = in.read(buff); read > -1; ) {
+					script.append(new String(buff, 0, read));
+					read = in.read(buff);
+				}
+			} catch (IOException e) {
+				log.error(e.getMessage(), e);
+			}
+		} else {
+			System.err.println("No script file to evaluate...");
+		}
 
-    BufferedOutputStream out = null;
-    if (args.hasOption("o")) {
-      try {
-        out = new BufferedOutputStream(new FileOutputStream(args.getOptionValue("o")));
-      } catch (FileNotFoundException e) {
-        log.error(e.getMessage(), e);
-      }
-    } else {
-      out = new BufferedOutputStream(System.out);
-    }
+		BufferedOutputStream out = null;
+		if (args.hasOption("o")) {
+			try {
+				out = new BufferedOutputStream(new FileOutputStream(args.getOptionValue("o")));
+			} catch (FileNotFoundException e) {
+				log.error(e.getMessage(), e);
+			}
+		} else {
+			out = new BufferedOutputStream(System.out);
+		}
 
-    String[] includes = (System.getenv().containsKey("MQDSL_INCLUDE") ? System.getenv("MQDSL_INCLUDE")
-        .split(String.valueOf(File.pathSeparatorChar)) : new String[]{"."});
-    try {
-      GroovyScriptEngine engine = new GroovyScriptEngine(includes);
-      Binding binding = new Binding(args.getArgs());
-      RabbitMQBuilder builder = new RabbitMQBuilder();
+		String[] includes = (System.getenv().containsKey("MQDSL_INCLUDE") ? System.getenv("MQDSL_INCLUDE")
+				.split(String.valueOf(File.pathSeparatorChar)) : new String[]{"."});
+		try {
+			Binding binding = new Binding(args.getArgs());
+			RabbitMQBuilder builder = new RabbitMQBuilder();
 
-      // Setup RabbitMQ
-      String username = (args.hasOption("U") ? args.getOptionValue("U") : props
-          .getProperty("mq.user", "guest"));
-      String password = (args.hasOption("P") ? args.getOptionValue("P") : props.getProperty("mq.password", "guest"));
-      String virtualHost = (args.hasOption("v") ? args.getOptionValue("v") : props
-          .getProperty("mq.virtualhost", "/"));
-      String host = (args.hasOption("h") ? args.getOptionValue("h") : props.getProperty("mq.host", "localhost"));
-      int port = Integer.parseInt(args.hasOption("p") ? args.getOptionValue("p") : props.getProperty("mq.port",
-          "5672"));
+			// Setup RabbitMQ
+			String username = (args.hasOption("U") ? args.getOptionValue("U") : props
+					.getProperty("mq.user", "guest"));
+			String password = (args.hasOption("P") ? args.getOptionValue("P") : props.getProperty("mq.password", "guest"));
+			String virtualHost = (args.hasOption("v") ? args.getOptionValue("v") : props
+					.getProperty("mq.virtualhost", "/"));
+			String host = (args.hasOption("h") ? args.getOptionValue("h") : props.getProperty("mq.host", "localhost"));
+			int port = Integer.parseInt(args.hasOption("p") ? args.getOptionValue("p") : props.getProperty("mq.port",
+					"5672"));
 
-      ConnectionFactory mqConnFactory = new ConnectionFactory();
-      mqConnFactory.setHost(host);
-      mqConnFactory.setPort(port);
-      mqConnFactory.setUsername(username);
-      mqConnFactory.setPassword(password);
-      if (null != virtualHost) {
-        mqConnFactory.setVirtualHost(virtualHost);
-      }
-      mqConnection = mqConnFactory.newConnection();
-      builder.setConnection(mqConnection);
-      binding.setVariable("mq", builder);
-      binding.setVariable("send", new PublishClosure(binding, mqConnection));
-      binding.setVariable("stdout", out);
-      binding.setVariable("log", LoggerFactory.getLogger(filename.replaceAll("\\.g$", "")));
+			SingleConnectionFactory connectionFactory = new SingleConnectionFactory(host);
+			connectionFactory.setPort(port);
+			connectionFactory.setUsername(username);
+			connectionFactory.setPassword(password);
+			if (null != virtualHost) {
+				connectionFactory.setVirtualHost(virtualHost);
+			}
 
-      GroovyShell shell = new GroovyShell(binding);
-      try {
-        shell.evaluate(new StringReader(script.toString()));
-      } catch (Throwable t) {
-        builder.dispatchError(t);
-        // Doesn't do much good to dispatch into a script that has a syntax error, so...
-        t.printStackTrace();
-      }
+			builder.setConnectionFactory(connectionFactory);
+			binding.setVariable("mq", builder);
+			//binding.setVariable("consume", new Consume(connectionFactory));
+			//binding.setVariable("publish", new Publish(connectionFactory));
+			binding.setVariable("log", LoggerFactory.getLogger(filename.replaceAll("\\.groovy$", "")));
 
-      while (builder.isActive()) {
-        try {
-          Thread t = Thread.currentThread();
-          synchronized (t) {
-            t.wait(500);
-          }
-        } catch (InterruptedException e) {
-          log.error(e.getMessage(), e);
-        }
-      }
+			GroovyShell shell = new GroovyShell(binding);
+			try {
+				shell.evaluate(script.toString());
+			} catch (Throwable t) {
+				builder.dispatchError(t);
+				// Doesn't do much good to dispatch into a script that has a syntax error, so...
+				t.printStackTrace();
+			}
 
-      try {
-        mqConnection.close();
-        out.flush();
-        out.close();
-      } catch (Throwable ignored) {
-      }
+			while (builder.isActive()) {
+				try {
+					Thread t = Thread.currentThread();
+					synchronized (t) {
+						t.wait(500);
+					}
+				} catch (InterruptedException e) {
+					log.error(e.getMessage(), e);
+				}
+			}
 
-    } catch (IOException e) {
-      e.printStackTrace();
-      System.exit(1);
-    } finally {
-      System.exit(0);
-    }
-  }
+		} finally {
+			System.exit(0);
+		}
+	}
 
-  public static void printUsage() {
-    System.err
-        .println(
-            "Usage: mqdsl [-h MQHOST [-p MQPORT] -U MQUSER -P MQPASS -v MQVHOST] [-f <file to execute>] [-o <output file>]");
-    System.err.println("   or: cat <file to execute> | mqdsl -o <output file>");
-  }
+	public static void printUsage() {
+		System.err
+				.println(
+						"Usage: mqdsl [-h MQHOST [-p MQPORT] -U MQUSER -P MQPASS -v MQVHOST] [-f <file to execute>] [-o <output file>]");
+		System.err.println("   or: cat <file to execute> | mqdsl -o <output file>");
+	}
 
 }
