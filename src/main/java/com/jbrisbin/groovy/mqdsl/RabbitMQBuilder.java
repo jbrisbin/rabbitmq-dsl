@@ -99,9 +99,7 @@ public class RabbitMQBuilder extends BuilderSupport {
 	public void setConnectionFactory(ConnectionFactory connectionFactory) {
 		this.connectionFactory = connectionFactory;
 		this.rabbitTemplate = new RabbitTemplate(connectionFactory);
-		this.rabbitTemplate.afterPropertiesSet();
 		this.rabbitAdmin = new RabbitAdmin(connectionFactory);
-		this.rabbitAdmin.afterPropertiesSet();
 	}
 
 	public boolean isActive() {

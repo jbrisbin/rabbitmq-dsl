@@ -8,6 +8,8 @@ mq { channel ->
 	//channel.exchangeDelete("test")
 }
 
+//helper.format("[DEBUG]: %s", "debug data")
+
 mq.exchange(name: "test", type: "direct") {
 
 	// Named, non-durable queue

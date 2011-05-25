@@ -154,6 +154,31 @@ If you want to run arbitrary Groovy code and access the RabbitMQ Channel object 
       channel.exchangeDelete("test.exchange")
     }
 
+## Helper scripts
+
+To facilitate re-using bits of code, you might want to put commonly-used functions inside helper scripts. By default,
+the DSL command-line client will look in your user's HOME/.mqdsl.d/ directory for *.groovy files and "sources" them into
+your current context. To change this behaviour, define an environment variable named MQDSL_INCLUDE. Each path element can
+be a directory in which to search for scripts, or can be the path to an actual script:
+
+    export MQDSL_INCLUDE=$HOME/.mqdsl.d:$HOME/src/groovy/utils.groovy
+
+When the file is evaluated, it doesn't put them in the root context. It uses the name of the file as the variable name.
+e.g. create a file in ~/.mqdsl.d/helper.groovy. In that file, put:
+
+    def format(msg, Object... args) {
+      println String.format(msg, args)
+    }
+
+and in your DSL file, use it like so:
+
+    helper.format("[DEBUG]: %s", "debug data")
+
+When you run your DSL file, in the console you should see:
+
+    [DEBUG]: debug data
+
+
 #### Notes:
 
 * Returning a non-null or "true" result from the closure specified on the consumer causes it to keep listening for
