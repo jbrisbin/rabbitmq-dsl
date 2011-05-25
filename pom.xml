@@ -6,7 +6,7 @@
 
 	<groupId>com.jbrisbin</groupId>
 	<artifactId>rabbitmq-dsl</artifactId>
-	<version>1.3.0</version>
+	<version>1.3.2</version>
 	<name>RabbitMQ Groovy DSL</name>
 
 	<properties>

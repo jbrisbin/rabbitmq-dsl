@@ -15,13 +15,17 @@
     </layout>
   </appender>
 
-  <!--category name="com.jbrisbin">
-    <level value="DEBUG"/>
-  </category-->
+  <category name="com.jbrisbin">
+    <level value="WARN"/>
+    <appender-ref ref="logfile"/>
+  </category>
+  <category name="org.springframework">
+    <level value="WARN"/>
+    <appender-ref ref="logfile"/>
+  </category>
 
   <root>
-		<level value="INFO"/>
-    <appender-ref ref="logfile"/>
+    <appender-ref ref="console"/>
   </root>
 
 </log4j:configuration>

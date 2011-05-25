@@ -156,7 +156,8 @@ public class RabbitMQDsl {
 			// Our execution environment
 			Binding binding = new Binding(args.getArgs());
 			binding.setVariable("mq", builder);
-			binding.setVariable("log", LoggerFactory.getLogger(filename.replaceAll("\\.groovy$", "")));
+			String fileBaseName = filename.replaceAll("\\.groovy$", "");
+			binding.setVariable("log", LoggerFactory.getLogger(fileBaseName.substring(fileBaseName.lastIndexOf("/") + 1)));
 
 			// Include helper files
 			GroovyShell shell = new GroovyShell(binding);
