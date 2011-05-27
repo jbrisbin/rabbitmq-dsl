@@ -1,5 +1,7 @@
+import org.springframework.amqp.core.MessageListener
+
 mq.on error: { err -> err.printStackTrace() },
-		myevent: { msg -> println "myevent: ${new String(msg.body)}" },
+		myevent: [{ msg -> println "myevent: ${new String(msg.body)}"; return false }],
 		afterPublish: { exchange, routingKey, msg -> log.info("Published to " + exchange + "/" + routingKey) }
 
 // Initialization
@@ -12,12 +14,22 @@ mq { channel ->
 
 mq.exchange(name: "test", type: "direct") {
 
-	// Named, non-durable queue
 	queue(name: "test", routingKey: "test.key") {
 		consume onmessage: "myevent"
 	}
 
-	// Anonymous (server-generated) non-durable queue
+	def consumer
+	def listener = [
+		    onMessage: { msg ->
+					println "Invoked from a standard MessageListener"
+					consumer?.shutdown()
+				}
+		] as MessageListener
+
+	queue(name: null, routingKey: "test.key") {
+		consumer = consume onmessage: listener
+	}
+
 	queue(name: null, routingKey: "test2.key") {
 		consume(ack: "auto") { msg ->
 			def body = new String(msg.body)
@@ -38,7 +50,6 @@ mq.exchange(name: "test", type: "direct") {
 		}
 	}
 
-	// Poke some messages
 	publish(routingKey: "test.key") {
 		"this is from a publish"
 	}
@@ -48,3 +59,4 @@ mq.exchange(name: "test", type: "direct") {
 	}
 
 }
+

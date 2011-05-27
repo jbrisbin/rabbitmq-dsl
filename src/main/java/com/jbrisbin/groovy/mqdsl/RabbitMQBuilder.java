@@ -49,6 +49,7 @@ import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
+import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter;
 import org.springframework.util.StringUtils;
 
 /**
@@ -197,9 +198,15 @@ public class RabbitMQBuilder extends BuilderSupport {
 					handlers = new ArrayList<Closure>();
 					eventHandlers.put(eventName, handlers);
 				}
-				Closure cl = entry.getValue();
-				cl.setProperty(NAME, eventName);
-				handlers.add(cl);
+				if (entry.getValue() instanceof List) {
+					for (Closure cl : (List<Closure>) entry.getValue()) {
+						handlers.add(cl);
+					}
+				} else if (entry.getValue() instanceof Closure) {
+					Closure cl = entry.getValue();
+					cl.setProperty(NAME, eventName);
+					handlers.add(cl);
+				}
 			}
 			return null;
 		} else if (EXCHANGE.equals(node)) {
@@ -226,15 +233,16 @@ public class RabbitMQBuilder extends BuilderSupport {
 				}
 				currentExchange = exchange;
 
-				try {
-					rabbitAdmin.declareExchange(exchange);
-				} catch (Exception e) {
-					log.error(e.getMessage(), e);
-					dispatchError(e);
-				}
 			} else {
 				currentExchange = new DirectExchange(name);
 			}
+			try {
+				rabbitAdmin.declareExchange(currentExchange);
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+				dispatchError(e);
+			}
+
 			return exchange;
 		} else if (QUEUE.equals(node)) {
 			boolean durable = params.containsKey(DURABLE) ? (Boolean) params.get(DURABLE) : false;
@@ -315,6 +323,10 @@ public class RabbitMQBuilder extends BuilderSupport {
 							consume.setEventName((String) onMessage);
 						} else if (onMessage instanceof Closure) {
 							consume.setDelegate((Closure) onMessage);
+						} else if (onMessage instanceof MessageListener) {
+							listenerContainer.setMessageListener(onMessage);
+						} else {
+							listenerContainer.setMessageListener(new MessageListenerAdapter(onMessage));
 						}
 					}
 
