@@ -1,0 +1,94 @@
+package dsld
+
+import org.codehaus.groovy.ast.DynamicVariable;
+
+import groovy.lang.Closure;
+
+import java.util.Map;
+
+isScript().accept {
+    provider = "RabbitMQBuilder DSL"
+    property name:'mq', type:'com.jbrisbin.groovy.mqdsl.RabbitMQBuilder'
+}
+
+def mq = currentType('com.jbrisbin.groovy.mqdsl.RabbitMQBuilder')
+
+mq.accept {
+	provider = "RabbitMQBuilder DSL"
+
+	method name: "exchange", 
+	type: "org.springframework.amqp.core.Exchange", 
+	useNamedArgs: true, 
+	params: [name: String, type: String, durable: Boolean, autoDelete: Boolean, arguments: Map], 
+	doc: """
+		Declares an exchange. 
+		<b>name</b> should be specified, all other parameters are optional.
+		<b>type</b> is typically one of "direct", "fanout", "topic" or "header" and defaults to "direct".
+		<b>durable</b> and <b>auto-delete</b> default to "false". 
+	"""
+	
+	method name: "on",
+	doc: """
+		Registers event handlers using given Map with event names as keys and Closures as values. 
+		Valid event names with Closure arguments are:
+		<ul>
+			<li><b>error</b>, passes Exception </li>
+			<li><b>beforePublish</b>, passes exchange, routingKey and message</li>
+			<li><b>afterPublish</b>, passes exchange, routingKey and message</li>
+			<li>custom event names passed to consume()'s 'onmessage', passes message</li>
+		</ul>
+		messages are of type org.springframework.amqp.core.Message.
+	"""
+}
+
+(mq | enclosingCallName("exchange")).accept {
+	provider = "RabbitMQBuilder DSL"
+
+	method name: "queue",
+	type: "org.springframework.amqp.core.Queue",
+	useNamedArgs: true,
+	params: [name: String, routingKey: String, durable: Boolean, autoDelete: Boolean, exclusive: Boolean, arguments: Map],
+	doc: """
+		Declares a queue. When defined within an exchange, the queue will be bound to that exchange.
+		All parameters are optional.
+		<b>durable</b> and <b>exclusive</b> default to "false", <b>auto-delete</b> defaults to "true".
+	"""
+}
+
+(mq | enclosingCallName("exchange") | enclosingCallName("queue") | enclosingCallName("consume")).accept {
+	provider = "RabbitMQBuilder DSL"
+
+	method name: "publish",
+	doc: """
+		Publishes a message. 
+		Supported named parameters are both standard and custom AMQP headers,
+		<b>routingKey</b> and <b>exchange</b>. Uses outer exchange by default when defined in one.
+		Last routing key is remembered, so it's optional for subsequent publish calls needing the same key.
+		Pass in a Closure that returns the message payload or accepts a <b>ByteArrayOutputStream</b>
+		as a parameter and writes the payload to that. Returned payload will be converted to bytes automatically.
+		Standard headers that are recognized:
+		<ul>
+			<li>contentType</li>
+			<li>correlationId</li>
+			<li>replyTo</li>
+			<li>contentEncoding</li>
+		</ul>
+	"""
+}
+
+enclosingCallName("queue").accept {
+	provider = "RabbitMQBuilder DSL"
+
+	method name: "consume",
+	params: [onmessage: String, ack: String],
+	useNamedArgs: true,
+	doc: """
+		Register a message consumer for the outer queue by calling a passed in Closure
+		with a org.springframework.amqp.core.Message. 
+		Closure can be passed is as-is as the single parameter, or as the value of a 
+		named <b>onmessage</b> parameter: this parameter accepts an event name as value
+		as an alternative to a closure, in which case you'll need to register an event
+		handler using 'on'. 
+		The other valid named parameter is <b>ack</b> (one of 'NONE', 'MANUAL' or 'AUTO' where 'AUTO is the default').
+	"""
+}
