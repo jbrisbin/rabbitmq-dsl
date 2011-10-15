@@ -3,7 +3,7 @@
 MQDSL_BIN=`dirname "$0"`
 
 # Add all jars in "lib" to CLASSPATH
-CLASSPATH=$MQDSL_BIN/conf
+CLASSPATH=$MQDSL_BIN/../conf
 for lib in $MQDSL_BIN/../lib/*.jar; do
   CLASSPATH=$lib:$CLASSPATH
 done

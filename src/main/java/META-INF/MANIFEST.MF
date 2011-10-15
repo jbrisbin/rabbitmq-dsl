@@ -1,0 +1,12 @@
+Manifest-Version: 1.0
+Class-Path: asm-commons-3.2.jar asm-tree-3.2.jar commons-io-1.2.jar sp
+ ring-asm-3.1.0.RC1.jar jcl-over-slf4j-1.6.2.jar antlr-2.7.7.jar sprin
+ g-tx-3.1.0.RC1.jar spring-core-3.1.0.RC1.jar spring-amqp-1.0.0.RELEAS
+ E.jar spring-aop-3.1.0.RC1.jar commons-cli-1.2.jar spring-context-3.1
+ .0.RC1.jar aopalliance-1.0.jar spring-rabbit-1.0.0.RELEASE.jar asm-an
+ alysis-3.2.jar groovy-1.8.3.jar slf4j-api-1.6.2.jar amqp-client-2.5.1
+ .jar asm-3.2.jar spring-expression-3.1.0.RC1.jar spring-beans-3.1.0.R
+ C1.jar logback-core-0.9.29.jar asm-util-3.2.jar logback-classic-0.9.2
+ 9.jar
+Main-Class: com.jbrisbin.groovy.mqdsl.RabbitMQDsl
+

@@ -1,8 +1,6 @@
 .DS_Store
-target
-*.iml
-*.iws
-rabbitmq-dsl.i*
+build
+*.i*
 lib
 log
 .gradle
