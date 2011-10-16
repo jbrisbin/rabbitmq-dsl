@@ -24,6 +24,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.Properties;
 
 import groovy.lang.Binding;
@@ -119,15 +120,15 @@ public class RabbitMQDsl {
       System.err.println("No script file to evaluate...");
     }
 
-    BufferedOutputStream out = null;
+    PrintStream stdout = System.out;
+    PrintStream out = null;
     if (args.hasOption("o")) {
       try {
-        out = new BufferedOutputStream(new FileOutputStream(args.getOptionValue("o")));
+        out = new PrintStream(new FileOutputStream(args.getOptionValue("o")), true);
+        System.setOut(out);
       } catch (FileNotFoundException e) {
         log.error(e.getMessage(), e);
       }
-    } else {
-      out = new BufferedOutputStream(System.out);
     }
 
     String[] includes = (System.getenv().containsKey("MQDSL_INCLUDE") ?
@@ -159,6 +160,9 @@ public class RabbitMQDsl {
       binding.setVariable("mq", builder);
       String fileBaseName = filename.replaceAll("\\.groovy$", "");
       binding.setVariable("log", LoggerFactory.getLogger(fileBaseName.substring(fileBaseName.lastIndexOf("/") + 1)));
+      if (null != out) {
+        binding.setVariable("out", out);
+      }
 
       // Include helper files
       GroovyShell shell = new GroovyShell(binding);
@@ -182,13 +186,15 @@ public class RabbitMQDsl {
 
       while (builder.isActive()) {
         try {
-          Thread t = Thread.currentThread();
-          synchronized (t) {
-            t.wait(500);
-          }
+          Thread.sleep(500);
         } catch (InterruptedException e) {
           log.error(e.getMessage(), e);
         }
+      }
+
+      if (null != out) {
+        out.close();
+        System.setOut(stdout);
       }
 
     } finally {

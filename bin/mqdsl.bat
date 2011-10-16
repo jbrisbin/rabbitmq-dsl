@@ -1,7 +1,7 @@
 @echo off
 setlocal enabledelayedexpansion
 
-set CP=%~dp0\conf
+set CP=%~dp0..\conf
 rem Add all jars in "lib" to CLASSPATH
 for %%j in ("%~dp0..\lib\*.jar") do set CP=!CP!%%~fj;
 rem Add packaged jar
