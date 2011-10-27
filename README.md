@@ -23,12 +23,12 @@ Clone the source code:
 Build a jar file of the command-line DSL runner:
 
     cd rabbitmq-dsl
-    mvn -Dmaven.test.skip=true package
+    ./gradlew jar
 
 Copy the dependencies into a directory called "lib":
 
-    mkdir lib
-    mvn dependency:copy-dependencies -DoutputDirectory=lib
+    ./gradlew copyDependencies
+    cp build/libs/rabbitmq-dsl-1.3.5-SNAPSHOT.jar lib
 
 Then create a directory for your log files (or edit the bash script to put log files elsewhere):
 

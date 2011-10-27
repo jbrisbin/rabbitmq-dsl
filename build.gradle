@@ -5,7 +5,7 @@ apply plugin: "eclipse"
 
 def description = "Groovy DSL for working with RabbitMQ"
 group = "com.jbrisbin"
-version = "1.3.4"
+version = "1.3.5-SNAPSHOT"
 
 //project.sourceCompatibility = 7
 
@@ -50,5 +50,12 @@ dependencies {
 }
 
 task wrapper(type: Wrapper) { gradleVersion = "1.0-milestone-5" }
+
+task copyDependencies << {
+  copy {
+    from configurations.runtime
+    into "lib"
+  }
+}
 
 //idea.module.jdkName = "OpenJDK 1.7"

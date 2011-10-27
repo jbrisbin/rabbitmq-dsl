@@ -285,6 +285,8 @@ public class RabbitMQBuilder extends BuilderSupport {
               binding = BindingBuilder.bind(q).to((HeadersExchange) currentExchange).whereAll(arguments).match();
             } else if (currentExchange instanceof TopicExchange) {
               binding = BindingBuilder.bind(q).to((TopicExchange) currentExchange).with(routingKey);
+            } else if (currentExchange instanceof CustomExchange) {
+              binding = BindingBuilder.bind(q).to(currentExchange).with(routingKey).noargs();
             }
 
             if (null != binding) {
