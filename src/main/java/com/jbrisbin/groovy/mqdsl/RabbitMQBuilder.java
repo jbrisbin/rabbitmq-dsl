@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.AcknowledgeMode;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
+import org.springframework.amqp.core.CustomExchange;
 import org.springframework.amqp.core.DirectExchange;
 import org.springframework.amqp.core.Exchange;
 import org.springframework.amqp.core.FanoutExchange;
@@ -230,6 +231,8 @@ public class RabbitMQBuilder extends BuilderSupport {
           exchange = new FanoutExchange(name, durable, autoDelete, arguments);
         } else if (HEADERS.equals(type)) {
           exchange = new HeadersExchange(name, durable, autoDelete, arguments);
+        } else {
+          exchange = new CustomExchange(name, type, durable, autoDelete, arguments);
         }
         currentExchange = exchange;
 
