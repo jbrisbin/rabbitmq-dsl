@@ -5,9 +5,9 @@ apply plugin: "eclipse"
 
 def description = "Groovy DSL for working with RabbitMQ"
 group = "com.jbrisbin"
-version = "1.3.4-SNAPSHOT"
+version = "1.3.4"
 
-project.sourceCompatibility = 7
+//project.sourceCompatibility = 7
 
 configurations {
   all*.exclude group: "commons-logging"
@@ -33,6 +33,7 @@ dependencies {
 
   // Spring
   compile "org.springframework:spring-beans:$springVersion"
+  compile "org.springframework:spring-context:$springVersion"
   compile "org.springframework:spring-tx:$springVersion"
 
   // Spring AMQP
@@ -50,4 +51,4 @@ dependencies {
 
 task wrapper(type: Wrapper) { gradleVersion = "1.0-milestone-5" }
 
-idea.module.jdkName = "OpenJDK 1.7"
+//idea.module.jdkName = "OpenJDK 1.7"
